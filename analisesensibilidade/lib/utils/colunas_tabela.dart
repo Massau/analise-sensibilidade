@@ -1,24 +1,8 @@
 import 'dart:math';
 
 List<String> variaveisFolga = ['s1', 's2', 's3'];
-main() {
-  // final List resultadoSimplex = [
-  //   [
-  //     ['Base', 'x1', 'x2', 'x3', 's1', 's2', 's3', 'b'],
-  //     ['x2', 0, 1, 0.83, 1.66, -0.16, 0, 66.66],
-  //     ['x1', 1, 0, 0.16, -0.66, 0.16, 0, 33.33],
-  //     ['s3', 0, 0, 4, -2, 0, 1, 100],
-  //     ['z', 0, 0, 2.66, 3.33, 0.66, 0, 733.33],
-  //   ]
-  // ];
-
-  // Map<dynamic, dynamic> _colunas = delimitaColunasSimplex(resultadoSimplex);
-  // Map<dynamic, dynamic> _colunaValorFinal = valorFinal(_colunas);
-  // Map<dynamic, dynamic> _colunaPrecoSombra =
-  //     _precoSombra(_colunas, _colunaValorFinal);
-  // Map<dynamic, dynamic> _colunasAumentarReduzir =
-  //     aumentarReduzir(_colunas);
-}
+List valoresMin = [];
+List valoresMax = [];
 
 Map<dynamic, dynamic> delimitaColunasSimplex(List tabelaSimplex) {
   int _qntLinhas = tabelaSimplex.first.length;
@@ -79,7 +63,7 @@ Map<dynamic, dynamic> _insereVariaveisFolgaFaltantes(
   return _variavelFolgaFaltante;
 }
 
-Map<dynamic, dynamic> _precoSombra(
+Map<dynamic, dynamic> precoSombra(
     Map<dynamic, dynamic> colunas, Map<dynamic, dynamic> colunaVf) {
   List _colunaPosicaoBase = colunas['Base'];
   List _titulosColunasBase = colunaVf.keys.toList();
@@ -100,8 +84,7 @@ Map<dynamic, dynamic> _precoSombra(
   return _colunaPrecoSombra;
 }
 
-aumentarReduzir(
-    Map<dynamic, dynamic> colunas) {
+aumentarReduzir(Map<dynamic, dynamic> colunas) {
   Map<dynamic, dynamic> _valoresParaSeremOrdenados =
       _calculaValoresIdentificarMaxMin(colunas);
   Map<String, dynamic> _colunaAumentarReduzir = {};
@@ -111,34 +94,40 @@ aumentarReduzir(
   return _colunaAumentarReduzir;
 }
 
+atribuiValoresMinMax(Map<String, dynamic> colunaAumentarReduzir) {
+  colunaAumentarReduzir.forEach((key, value) {
+    valoresMin.add(value['min']);
+    valoresMax.add(value['max']);
+  });
+}
+
 Map<dynamic, dynamic> _separaValoresMaxMin(Map<dynamic, dynamic> valores) {
-  int _qntColunas = valores.keys.length;
   Map<String, dynamic> _colunaMaxMin = {};
 
-  for (var i = 0; i < _qntColunas; i++) {
-    
-    String _chave = _keyReferenteIndiceDoMap(valores, i);
-    _colunaMaxMin[_chave] = {'max': 0, 'min': 0};
-    valores[_chave].removeWhere((numero) => numero.isInfinite == true);
+  valores.forEach((key, value) {
+    _colunaMaxMin[key] = {'max': '-', 'min': '-'};
 
-      Map<String, List<int>> _identificaValoresMaxMin = {'max': [], 'min': []};
-    for (var j = 0; j < valores[_chave].length; j++) {
-      if (valores[_chave][j] >= 0) {
-        _identificaValoresMaxMin['max'].add(valores[_chave][j]);
+    if (key.contains('s')) {
+      List<int> _valoresFormatados = value.cast<int>();
+      valores[key].removeWhere((numero) => numero.isInfinite == true);
+
+      List<int> _valoresNegativos = _valoresFormatados
+          .where((valorAtual) => valorAtual.isNegative)
+          .toList();
+      _colunaMaxMin[key]['min'] =
+          _valoresNegativos.reduce(min).toString();
+
+      _valoresFormatados
+          .removeWhere((valorAtual) => _valoresNegativos.contains(valorAtual));
+
+      if (_valoresFormatados.length > 0) {
+        _colunaMaxMin[key]['max'] =
+            _valoresFormatados.reduce(max).toString();
       } else {
-        _identificaValoresMaxMin['min'].add(valores[_chave][j]);
-      }
-
-      if (_identificaValoresMaxMin['min'].length > 0) {
-        _colunaMaxMin[_chave]['min'] = _identificaValoresMaxMin['min'].reduce(min);
-      }
-
-      if (_identificaValoresMaxMin['max'].length > 0) {
-        _colunaMaxMin[_chave]['max'] = _identificaValoresMaxMin['max'].reduce(min);
+        _colunaMaxMin[key]['max'] = '∞';
       }
     }
-
-  }
+  });
 
   return _colunaMaxMin;
 }
@@ -154,12 +143,22 @@ Map<dynamic, dynamic> _calculaValoresIdentificarMaxMin(
     _valoresParaSeremOrdenados[_chave] = [];
 
     for (var j = 0; j < _qntLinhas - 1; j++) {
-      var _operacaoEntreValoresColunas = colunas['b'][j] / colunas[_chave][j];
+      var _operacaoEntreValoresColunas;
 
-      if (!_operacaoEntreValoresColunas.isInfinite) {
-        _operacaoEntreValoresColunas =
-            int.parse((_operacaoEntreValoresColunas * (-1)).toStringAsFixed(0));
+      if (_chave.contains('s')) {
+        _operacaoEntreValoresColunas = colunas['b'][j] / colunas[_chave][j];
+
+        if (!_operacaoEntreValoresColunas.isInfinite) {
+          if (_chave.contains('s2')) {
+            print('object');
+          }
+          _operacaoEntreValoresColunas = int.parse(
+              (_operacaoEntreValoresColunas * (-1)).toStringAsFixed(0));
+        }
+      } else {
+        _operacaoEntreValoresColunas = '-';
       }
+
       _valoresParaSeremOrdenados[_chave].add(
         _operacaoEntreValoresColunas,
       );

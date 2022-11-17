@@ -39,26 +39,32 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-  Map<dynamic, dynamic> _colunas = delimitaColunasSimplex(resultadoSimplex);
-  
-  List<Widget> _geraColunaDeTitulos(List<dynamic> titulos) {
-    List<Widget> _colunaTitulos = [];
+    Map<dynamic, dynamic> _colunas = delimitaColunasSimplex(resultadoSimplex);
+    Map<dynamic, dynamic> _colunaValorFinal = valorFinal(_colunas);
+    Map<dynamic, dynamic> _colunaPrecoSombra =
+        precoSombra(_colunas, _colunaValorFinal);
+    Map<dynamic, dynamic> _colunasAumentarReduzir = aumentarReduzir(_colunas);
+    atribuiValoresMinMax(_colunasAumentarReduzir);
 
-    for (var i = 0; i < titulos.length; i++) {
-      _colunaTitulos.add(
-        Container(
-          width: 80,
-          child: Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: Text(titulos[i].toString()),
+
+    List<Widget> _geraColuna(List<dynamic> celulas) {
+      List<Widget> _coluna = [];
+
+      for (var i = 0; i < celulas.length; i++) {
+        _coluna.add(
+          Container(
+            width: 80,
+            child: Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Text(celulas[i].toString()),
+            ),
+            decoration: BoxDecoration(border: Border.all()),
           ),
-          decoration: BoxDecoration(border: Border.all()),
-        ),
-      );
-    }
+        );
+      }
 
-    return _colunaTitulos;
-  }
+      return _coluna;
+    }
 
     return Scaffold(
       body: Center(
@@ -69,8 +75,21 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                Column(children: _geraColunaDeTitulos(valorFinal(_colunas).keys.toList())),
-                Column(children: _geraColunaDeTitulos(valorFinal(_colunas).values.toList()))
+                Column(
+                  children: _geraColuna(_colunaValorFinal.keys.toList()),
+                ),
+                Column(
+                  children: _geraColuna(_colunaValorFinal.values.toList()),
+                ),
+                Column(
+                  children: _geraColuna(_colunaPrecoSombra.values.toList()),
+                ),
+                Column(
+                  children: _geraColuna(valoresMax),
+                ),
+                Column(
+                  children: _geraColuna(valoresMin),
+                ),
               ],
             ),
           ),
